@@ -7,4 +7,4 @@
 - Cadena de conexión: Server=MARSHELLA;Database=TiendaRepuestosBd;Trusted_Connection=True;TrustServerCertificate=True
 - Usuario admin: admin - clave:pa$$W0rD@123
 
-![Descripción de la imagen]https://github.com/oscarmendoza9/ProyectoTiendaATMRepuestos/blob/main/TiendaRepuestos.png
+![](https://github.com/oscarmendoza9/ProyectoTiendaATMRepuestos/blob/main/TiendaRepuestos.png)
