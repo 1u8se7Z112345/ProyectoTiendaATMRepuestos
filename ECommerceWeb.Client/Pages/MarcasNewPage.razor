@@ -1,0 +1,21 @@
+﻿@page "/marcas/new"
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = Constantes.RolAdministrador)]
+
+<PageTitle>Nueva Marca</PageTitle>
+<h3 class="mb-5">Nueva Marca</h3>
+
+<MarcaEditComponent Model="Request" BotonGuardar="OnGrabar" />
+
+@code {
+
+    public MarcaDtoRequest Request { get; set; } = new();
+
+    private async Task OnGrabar()
+    {
+        await HttpClient.PostAsJsonAsync("api/Marcas", Request);
+        NavigationManager.NavigateTo("marcas/list");
+    }
+
+}

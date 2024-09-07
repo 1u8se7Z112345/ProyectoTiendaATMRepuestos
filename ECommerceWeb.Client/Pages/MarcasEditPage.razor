@@ -1,0 +1,35 @@
+﻿@page "/marcas/edit/{Id:int}"
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize(Roles = Constantes.RolAdministrador)]
+
+<PageTitle>Actualizar Marca</PageTitle>
+<h3 class="mt-5">Actualizar Marca</h3>
+
+<MarcaEditComponent Model="Request" BotonGuardar="OnActualizar" TextoBoton="Actualizar" />
+
+@code {
+
+    public MarcaDtoRequest Request { get; set; } = new();
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var response = await HttpClient.GetFromJsonAsync<MarcaDtoRequest>($"api/Marcas/{Id}");
+        if (response is not null)
+        {
+            Request = response;
+        }
+
+    }
+
+    private async Task OnActualizar()
+    {
+        await HttpClient.PutAsJsonAsync($"api/Marcas/{Id}", Request);
+        NavigationManager.NavigateTo("marcas/list");
+    }
+
+}

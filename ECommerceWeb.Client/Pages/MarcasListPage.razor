@@ -1,0 +1,78 @@
+﻿@page "/marcas/list"
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject SweetAlertService Swal
+
+<h3>Lista de Marcas</h3>
+<PageTitle>Marcas</PageTitle>
+
+<NavLink class="btn btn-primary mb-5" href="marcas/new"><i class="bi bi-plus-circle me-1"></i>Nuevo</NavLink>
+
+@if (Marcas is null)
+{
+    <p>Cargando....</p>
+}
+else if (!Marcas.Any())
+{
+    <p class="alert alert-warning">Sin datos para mostrar</p>
+}
+else
+{
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr class="table-dark">
+                <th>Id</th>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Marcas)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Nombre</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => Editar(item.Id)"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-danger" @onclick="() => Eliminar(item.Id)"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+
+@code {
+    public ICollection<MarcaDtoResponse>? Marcas { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Marcas = await HttpClient.GetFromJsonAsync<ICollection<MarcaDtoResponse>>("api/Marcas");
+    }
+
+    private void Editar(int id)
+    {
+        NavigationManager.NavigateTo($"/Marcas/edit/{id}");
+    }
+
+    private async Task Eliminar(int id)
+    {
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Esta seguro?",
+            Text = "Esta acción borrará el registro",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true,
+            ConfirmButtonText = "Sí, bórralo!",
+            CancelButtonText = "Por ahora no"
+        });
+
+        if (result.IsConfirmed)
+        {
+            await HttpClient.DeleteAsync($"api/Marcas/{id}");
+            Marcas = await HttpClient.GetFromJsonAsync<ICollection<MarcaDtoResponse>>("api/Marcas");
+        }
+    }
+}

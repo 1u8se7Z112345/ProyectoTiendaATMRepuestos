@@ -1,0 +1,23 @@
+﻿@page "/categorias/new"
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = Constantes.RolAdministrador)]
+
+<PageTitle>Nueva Categoria</PageTitle>
+
+<CategoriaEditComponent NombreBoton="Grabar nuevo" 
+                        Titulo="Nueva Categoria" 
+                        Request="Model" 
+                        OnBotonSubmit="Grabar" />
+
+@code {
+
+    public CategoriaDtoRequest Model { get; set; } = new();
+
+    private async Task Grabar()
+    {
+        await HttpClient.PostAsJsonAsync("api/Categorias", Model);
+        NavigationManager.NavigateTo("/categorias/list");
+    }
+
+}

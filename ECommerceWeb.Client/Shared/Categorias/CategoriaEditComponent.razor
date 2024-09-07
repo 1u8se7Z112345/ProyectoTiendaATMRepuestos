@@ -1,0 +1,51 @@
+﻿
+<h2 class="text-uppercase mb-2 mt-1">@Titulo</h2>
+
+<EditForm Model="Request" OnValidSubmit="OnBotonSubmit">
+    <DataAnnotationsValidator />
+  
+
+    <div class="row">
+        <div class="col-3">
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre</label>
+                <InputText class="form-control" id="nombre" @bind-Value="Request.Nombre" />
+                <ValidationMessage For="() => Request.Nombre" />
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-3">
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <input type="text" class="form-control" id="descripcion" @bind-value="Request.Descripcion">
+            </div>
+        </div>
+    </div>
+    <div class="row row-cols-3">
+        <div class="col-auto">
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-floppy me-1"></i>@NombreBoton</button>
+            </div>
+        </div>
+        <div class="col-auto">
+            <a class="btn btn-primary" href="categorias/list"><i class="bi bi-backspace me-1"></i>Regresar</a>
+        </div>
+    </div>
+    <ValidationSummary />
+</EditForm>
+
+@code {
+
+    [Parameter]
+    public string Titulo { get; set; } = "Categoria";
+
+    [Parameter]
+    public string NombreBoton { get; set; } = "Grabar";
+
+    [Parameter]
+    public CategoriaDtoRequest Request { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnBotonSubmit { get; set; }
+}

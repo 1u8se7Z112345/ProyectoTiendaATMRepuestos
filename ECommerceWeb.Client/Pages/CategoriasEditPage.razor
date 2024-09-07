@@ -1,0 +1,37 @@
+﻿@page "/categorias/edit/{Id:int}"
+
+@attribute [Authorize(Roles = Constantes.RolAdministrador)]
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+
+<CategoriaEditComponent NombreBoton="Actualizar nuevo"
+                        Titulo="Nueva Categoria"
+                        Request="Model"
+                        OnBotonSubmit="Actualizar" />
+
+
+@code 
+{
+
+    [Parameter]
+    public int Id { get; set; }
+
+    public CategoriaDtoRequest Model { get; set; } = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var response = await HttpClient.GetFromJsonAsync<CategoriaDtoRequest>($"api/Categorias/{Id}");
+        if (response is not null)
+        {
+            Model = response;
+        }
+    }
+
+
+    private async Task Actualizar()
+    {
+        await HttpClient.PutAsJsonAsync($"api/Categorias/{Id}", Model);
+        NavigationManager.NavigateTo("/categorias/list");
+    }
+}

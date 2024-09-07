@@ -1,0 +1,134 @@
+﻿@inject SweetAlertService Swal
+
+<h3 class="mb-5">@Titulo</h3>
+
+<EditForm Model="Model" OnValidSubmit="BotonGrabar">
+    <DataAnnotationsValidator />
+    <div class="container">
+        <div class="row">
+            <div class="col-5">
+                <div class="container">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="nombre" class="form-label">Nombre:</label>
+                            <InputText id="nombre" @bind-Value="Model.Nombre" class="form-control" />
+                            <ValidationMessage For="() => Model.Nombre" />
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="precio" class="form-label">Precio:</label>
+                            <InputNumber @bind-Value="Model.Precio" class="form-control" id="precio" />
+                            <ValidationMessage For="() => Model.Precio" />
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="categoria" class="form-label">Categoria:</label>
+                            <InputSelect class="form-select" id="categoria" @bind-Value="Model.CategoriaId">
+                                <option>-Seleccione Categoria-</option>
+                                @if (Categorias is not null)
+                                {
+                                    @foreach (var item in Categorias)
+                                    {
+                                        <option value="@item.Id">@item.Nombre</option>
+                                    }
+                                }
+                            </InputSelect>
+                        </div>
+
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="marca" class="form-label">Marca:</label>
+                            <InputSelect class="form-select" id="marca" @bind-Value="Model.MarcaId">
+                                <option>-Seleccione una marca-</option>
+                                @if (Marcas is not null)
+                                {
+                                    @foreach (var item in Marcas)
+                                    {
+                                        <option value="@item.Id">@item.Nombre</option>
+                                    }
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="card mt-4">
+                    <div class="card-body">
+                        @if (Model.Base64Imagen is not null)
+                        {
+                            <div style="margin: 10px">
+                                <img src="data:image/jpeg;base64,@Model.Base64Imagen" alt="@Model.Nombre" style="width: 400px" />
+                            </div>
+                        }
+                        else if (string.IsNullOrEmpty(@Model.UrlImagen))
+                        {
+                            <img src="assets/images/sinimagen.jpeg" alt="@Model.Nombre" style="width: 400px"/>
+                        }
+                        else
+                        {
+                            <img src="@Model.UrlImagen" alt="@Model.Nombre" style="width: 400px" />
+                        }
+                    </div>
+                    <div class="card-footer">
+                        <InputFile accept="image/png, image/jpeg, image/webp" style="display: none" id="file" OnChange="OnFileUpload" />
+                        <label for="file" class="btn btn-secondary"><i class="bi bi-camera me-1"></i>IMAGEN</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row row-cols-4">
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-floppy me-1"></i>Guardar</button>
+            </div>
+            <div class="col-auto">
+                <a class="btn btn-outline-primary" href="productos/list"><i class="bi bi-backspace me-1"></i>Regresar</a>
+            </div>
+        </div>
+    </div>
+
+</EditForm>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public ProductoDtoRequest Model { get; set; } = new();
+
+    [Parameter]
+    public ICollection<MarcaDtoResponse>? Marcas { get; set; }
+
+    [Parameter]
+    public ICollection<CategoriaDtoResponse>? Categorias { get; set; }
+
+    [Parameter]
+    public EventCallback BotonGrabar { get; set; }
+
+    [Parameter]
+    public string Titulo { get; set; } = "Productos";
+
+
+    private async Task OnFileUpload(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var size = 8 * 1024 * 1024;
+
+            var imagen = e.File;
+            var buffer = new byte[imagen.Size];
+            _ = await imagen.OpenReadStream(size).ReadAsync(buffer);
+
+            Model.Base64Imagen = Convert.ToBase64String(buffer);
+            Model.NombreArchivo = imagen.Name;
+            Model.UrlImagen = null;
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync("Error de archivo", ex.Message);
+        }
+    }
+}

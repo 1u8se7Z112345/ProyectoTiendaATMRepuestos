@@ -1,0 +1,78 @@
+﻿@page "/categorias/list"
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@inject SweetAlertService Swal
+
+<PageTitle>Categorias</PageTitle>
+
+<h3>Lista de Categorias</h3>
+
+<NavLink href="categorias/new" class="btn btn-primary mb-5"><i class="bi bi-plus-circle me-1"></i>Nuevo</NavLink>
+
+@if (Lista is null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr class="table-dark">
+                <th>Id</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Lista)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Nombre</td>
+                    <td>@item.Descripcion</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => Editar(item.Id)"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-danger" @onclick="() => Eliminar(item.Id)"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+
+    public ICollection<CategoriaDtoResponse>? Lista { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Lista = await HttpClient.GetFromJsonAsync<ICollection<CategoriaDtoResponse>>("api/Categorias");
+    }
+
+    private void Editar(int id)
+    {
+        NavigationManager.NavigateTo($"/categorias/edit/{id}");
+    }
+
+    private async Task Eliminar(int id)
+    {
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Esta seguro?",
+                Text = "Esta acción borrará el registro",
+                Icon = SweetAlertIcon.Warning,
+                ShowCancelButton = true,
+                ConfirmButtonText = "Sí, bórralo!",
+                CancelButtonText = "Por ahora no"
+            });
+
+        if (result.IsConfirmed)
+        {
+            await HttpClient.DeleteAsync($"api/Categorias/{id}");
+            Lista = await HttpClient.GetFromJsonAsync<ICollection<CategoriaDtoResponse>>("api/Categorias");
+        }
+    }
+}

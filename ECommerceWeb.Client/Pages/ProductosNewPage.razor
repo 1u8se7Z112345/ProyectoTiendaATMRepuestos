@@ -1,0 +1,38 @@
+﻿@page "/productos/new"
+
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = Constantes.RolAdministrador)]
+
+<ProductoEditComponent Model="Request"
+                       Titulo="Nuevo Producto"
+                       BotonGrabar="BotonGuardar" 
+                       Categorias="Categorias" 
+                       Marcas="Marcas" />
+
+@code {
+
+    public ProductoDtoRequest Request { get; set; } = new();
+
+    public ICollection<CategoriaDtoResponse>? Categorias { get; set; } 
+
+    public ICollection<MarcaDtoResponse>? Marcas { get; set; } 
+
+    protected override async Task OnInitializedAsync()
+    {
+        Categorias = await HttpClient.GetFromJsonAsync<ICollection<CategoriaDtoResponse>>("api/Categorias");
+
+        Marcas = await HttpClient.GetFromJsonAsync<ICollection<MarcaDtoResponse>>("api/Marcas");
+    }
+
+    private async Task BotonGuardar()
+    {
+        var response = await HttpClient.PostAsJsonAsync("api/Productos", Request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("productos/list");
+        }
+    }
+
+}

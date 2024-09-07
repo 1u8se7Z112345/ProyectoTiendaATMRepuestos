@@ -1,0 +1,183 @@
+﻿@page "/"
+
+@inject HttpClient HttpClient
+@inject IProductoProxy ProductoProxy
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+<PageTitle>Tienda de Repuestos Empresa ATM</PageTitle>
+<center>
+<h1 class="titulo" center>Empresa ATM repuestos y accesorios SAC</h1>
+</center>
+<div>
+    <div class="row justify-content-center mt-3 mb-4">
+        <div class="col-6">
+            <div class="input-group">
+                <input type="text" class="form-control bg-info-subtle" placeholder="Buscar producto" @onchange="EventoOnChange" />
+                <button class="btn btn-secondary" @onclick="ObtenerCatalogo">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-3">
+            @if (Categorias is not null)
+            {
+                <select class="form-select bg-info-subtle" @onchange="OnSelectionChange">
+                    <option>-Categoria-</option>
+                    @foreach (var categoria in Categorias)
+                    {
+                        <option value="@categoria.Id">@categoria.Nombre</option>
+                    }
+                </select>
+            }
+        </div>
+
+        <div class="col-3">
+            @if (Marcas is not null)
+            {
+                <select class="form-select bg-info-subtle" @onchange="OnMarcaChange">
+                    <option>-Marca-</option>
+                    @foreach (var marca in Marcas)
+                    {
+                        <option value="@marca.Id">@marca.Nombre</option> <!-- El value es el Id -->
+                    }
+                </select>
+            }
+        </div>
+
+    </div>
+</div>
+
+@if (Productos is not null)
+{
+    var filter = Productos;
+
+    // Filtrar por categoría seleccionada
+    if (CategoriaSeleccionada is { } catSeleccionado)
+    {
+        filter = filter.Where(p => p.CategoriaId == catSeleccionado).ToList();
+    }
+
+    // Filtrar por marca seleccionada
+    if (MarcaSeleccionada is { } marSeleccionado)
+    {
+        var productosAntesDelFiltro = filter.Count(); // Total antes del filtro
+        filter = filter.Where(p => p.MarcaId == marSeleccionado).ToList(); // Comparar MarcaId
+        Console.WriteLine($"Total productos antes del filtro de marca: {productosAntesDelFiltro}");
+        Console.WriteLine($"Total productos después del filtro de marca: {filter.Count()}"); // Total después del filtro
+    }
+
+
+    // Opcional: para depurar
+    Console.WriteLine($"Total productos filtrados: {filter.Count()}");
+
+    Console.WriteLine($"Total productos disponibles: {Productos.Count()}");
+    foreach (var producto in Productos)
+    {
+        Console.WriteLine($"Producto ID: {producto.Id}, Marca ID: {producto.MarcaId}");
+    }
+
+    <div class="container mb-5 gap-5">
+        <div class="row gx-4 row-cols-1 row-cols-md-3 row-cols-xl-5 justify-content-center">
+            @foreach (var producto in filter)
+            {
+                <ProductCard Producto="producto" OnClick="VerDetalle" />
+            }
+        </div>
+    </div>
+}
+
+<LoadingComponent IsLoading="IsLoading" />
+
+@code
+{
+    public ICollection<ProductoDtoResponse>? Productos { get; set; }
+    public ICollection<CategoriaDtoResponse>? Categorias { get; set; }
+    public ICollection<MarcaDtoResponse>? Marcas { get; set; }  // Lista de marcas
+    public int? CategoriaSeleccionada { get; set; }
+    public int? MarcaSeleccionada { get; set; }  // Marca seleccionada
+    public string Buscar { get; set; } = string.Empty;
+    public bool IsLoading { get; set; }
+
+
+    private async Task ObtenerCatalogo()
+    {
+        try
+        {
+            IsLoading = true;
+
+            Productos = await ProductoProxy.ListAsync(Buscar);
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ObtenerCatalogo();
+        var response = await HttpClient.GetFromJsonAsync<ICollection<CategoriaDtoResponse>>("api/Categorias");
+        if (response is not null)
+        {
+            Categorias = response;
+        }
+
+        // Cargar las marcas (puedes obtenerlas de tu API o simularlas)
+        var marcasResponse = await HttpClient.GetFromJsonAsync<ICollection<MarcaDtoResponse>>("api/Marcas");
+        if (marcasResponse is not null)
+        {
+            Marcas = marcasResponse;
+        }
+    }
+
+    private void OnSelectionChange(ChangeEventArgs args)
+    {
+        if (args.Value!.ToString()!.Contains("-"))
+        {
+            CategoriaSeleccionada = null;
+        }
+        else
+        {
+            CategoriaSeleccionada = int.Parse(args.Value.ToString()!);
+        }
+    }
+
+    private void OnMarcaChange(ChangeEventArgs args)
+    {
+        if (args.Value!.ToString()!.Contains("-"))
+        {
+            MarcaSeleccionada = null;  // Si selecciona "Todas las marcas"
+        }
+        else
+        {
+            int.TryParse(args.Value.ToString()!, out int marcaId);
+            MarcaSeleccionada = marcaId;  // Asegúrate de convertir correctamente el valor a int
+        }
+
+        // Opcional: para depurar
+        Console.WriteLine($"MarcaSeleccionada: {MarcaSeleccionada}");
+    }
+
+
+
+
+    private void VerDetalle(int id)
+    {
+        NavigationManager.NavigateTo($"/detalle/{id}");
+    }
+
+    private async Task EventoOnChange(ChangeEventArgs args)
+    {
+        Buscar = args.Value?.ToString() ?? string.Empty;
+
+        if (Buscar.Length > 2 || Buscar.Length == 0)
+        {
+            await ObtenerCatalogo();
+        }
+    }
+}
